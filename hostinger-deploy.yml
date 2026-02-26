@@ -1,5 +1,6 @@
 framework: nextjs
+nodeVersion: 20
+packageManager: npm
+installCommand: npm install
 buildCommand: npm run build
 startCommand: npm run start
-installCommand: npm install
-nodeVersion: 18
