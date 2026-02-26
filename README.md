@@ -28,11 +28,22 @@ npm run start
 
 1. Push this repo to GitHub.
 2. In Hostinger hPanel, create a new app from GitHub.
-3. Select **Next.js** framework.
-4. Set build command: `npm run build`
-5. Set start command: `npm run start`
-6. Add environment variables from `.env.example`.
-7. Deploy.
+3. Framework: **Next.js**.
+4. Root directory: `/`.
+5. Install command: `npm install`
+6. Build command: `npm run build`
+7. Start command: `npm run start`
+8. Node version: `18+` (recommended `20`).
+9. Add environment variables from `.env.example`.
+10. Deploy.
+
+### Fix for "Unsupported framework or invalid project structure"
+If Hostinger cannot detect the framework, verify:
+- `package.json` is at repo root and includes `next` dependency + build/start scripts.
+- `app/layout.tsx` and `app/page.tsx` exist.
+- `next.config.js` exists at root.
+- Deployment root is set to `/` (not a subfolder).
+- Branch selected in Hostinger is the one containing this scaffold.
 
 ## Project structure
 
