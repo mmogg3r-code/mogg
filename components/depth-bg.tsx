@@ -6,7 +6,7 @@ function Blob() {
   return (
     <mesh rotation={[0.4, 0.2, 0]}>
       <sphereGeometry args={[1.3, 32, 32]} />
-      <meshStandardMaterial color="#22D3EE" transparent opacity={0.35} />
+      <meshStandardMaterial {...({ color: '#22D3EE', transparent: true, opacity: 0.35 } as any)} />
     </mesh>
   );
 }
