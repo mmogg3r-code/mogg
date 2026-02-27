@@ -152,7 +152,7 @@ export default function Dashboard() {
           <h3 className="mb-3 font-semibold">Recent Bets</h3>
           <div className="space-y-2 text-sm">
             {bets.length === 0 ? <p className="text-white/60">No bets yet.</p> : bets.map((b) => (
-              <p key={b.id}>{b.game.toUpperCase()} stake {b.stakeEth} => payout {b.payoutEth} • nonce {b.nonce}</p>
+              <p key={b.id}>{b.game.toUpperCase()} stake {b.stakeEth} {"=>"} payout {b.payoutEth} • nonce {b.nonce}</p>
             ))}
           </div>
         </div>
