@@ -13,11 +13,14 @@ import {
   withdrawUnlocked
 } from './rules';
 
+export type BalanceMode = 'real' | 'play';
+
 export type Deposit = { txHash: string; eth: number; usd: number; at: string };
 export type SpinLog = {
   id: string;
   slotId: string;
   slotName: string;
+  mode: BalanceMode;
   betPerLineUsd: number;
   totalBetUsd: number;
   result: SpinResult;
@@ -28,7 +31,9 @@ export type JackpotPool = Record<string, number>;
 
 type State = {
   wallet: string | null;
-  playerFundsUsd: number;
+  mode: BalanceMode;
+  realFundsUsd: number;
+  playFundsUsd: number;
   totalDepositsUsd: number;
   totalWageredUsd: number;
   requestedWithdrawalUsd: number;
@@ -40,9 +45,11 @@ type State = {
   lastReel: string[][];
   popup: string | null;
   connectWallet: (address: string) => void;
+  setMode: (mode: BalanceMode) => void;
+  addPlayTokens: (usd: number) => void;
   trackDeposit: (txHash: string, eth: number) => { ok: boolean; message: string };
   selectSlot: (id: string) => void;
-  spin: (betPerLineUsd: number) => { ok: boolean; message: string };
+  spin: (betPerLineUsd: number, forcedSlotId?: string) => { ok: boolean; message: string };
   requestWithdrawal: (usd: number) => { ok: boolean; message: string };
   dismissPopup: () => void;
 };
@@ -53,7 +60,9 @@ const initialReel = Array.from({ length: 3 }).map(() => Array.from({ length: 3 }
 
 export const useCasinoStore = create<State>((set, get) => ({
   wallet: null,
-  playerFundsUsd: 0,
+  mode: 'real',
+  realFundsUsd: 0,
+  playFundsUsd: 10000,
   totalDepositsUsd: 0,
   totalWageredUsd: 0,
   requestedWithdrawalUsd: 0,
@@ -66,6 +75,8 @@ export const useCasinoStore = create<State>((set, get) => ({
   popup: null,
 
   connectWallet: (address) => set({ wallet: address }),
+  setMode: (mode) => set({ mode }),
+  addPlayTokens: (usd) => set((s) => ({ playFundsUsd: Number((s.playFundsUsd + Math.max(0, usd)).toFixed(2)) })),
 
   trackDeposit: (txHash, eth) => {
     if (eth < MIN_DEPOSIT_ETH) return { ok: false, message: `Minimum deposit is ${MIN_DEPOSIT_ETH} ETH.` };
@@ -73,7 +84,7 @@ export const useCasinoStore = create<State>((set, get) => ({
 
     const usd = Number((eth * USD_PER_ETH).toFixed(2));
     set((s) => ({
-      playerFundsUsd: Number((s.playerFundsUsd + usd).toFixed(2)),
+      realFundsUsd: Number((s.realFundsUsd + usd).toFixed(2)),
       totalDepositsUsd: Number((s.totalDepositsUsd + usd).toFixed(2)),
       deposits: [{ txHash, eth, usd, at: new Date().toISOString() }, ...s.deposits]
     }));
@@ -82,26 +93,28 @@ export const useCasinoStore = create<State>((set, get) => ({
 
   selectSlot: (id) => set({ selectedSlotId: id }),
 
-  spin: (betPerLineUsd) => {
+  spin: (betPerLineUsd, forcedSlotId) => {
     const s = get();
     if (betPerLineUsd <= 0 || betPerLineUsd > MAX_BET_PER_LINE_USD) {
       return { ok: false, message: `Bet per line must be > 0 and <= $${MAX_BET_PER_LINE_USD}.` };
     }
 
     const totalBet = Number((betPerLineUsd * LINES_PER_SLOT).toFixed(2));
-    if (s.playerFundsUsd < totalBet) return { ok: false, message: 'Insufficient player funds.' };
+    const activeFunds = s.mode === 'real' ? s.realFundsUsd : s.playFundsUsd;
+    if (activeFunds < totalBet) return { ok: false, message: `Insufficient ${s.mode} funds.` };
 
-    const slot = s.slots.find((x) => x.id === s.selectedSlotId) ?? s.slots[0];
+    const slotId = forcedSlotId ?? s.selectedSlotId;
+    const slot = s.slots.find((x) => x.id === slotId) ?? s.slots[0];
     const result = spinSlot(slot, betPerLineUsd, s.jackpots[slot.id]);
 
     const jackpotContribution = Number((totalBet * 0.015).toFixed(2));
-    const nextJackpot = Math.min(MAX_PROGRESSIVE_JACKPOT_USD, Number(((s.jackpots[slot.id] - result.jackpotWinUsd + jackpotContribution)).toFixed(2)));
-
-    const nextFunds = Number((s.playerFundsUsd - totalBet + result.totalWinUsd).toFixed(2));
+    const nextJackpot = Math.min(MAX_PROGRESSIVE_JACKPOT_USD, Number((s.jackpots[slot.id] - result.jackpotWinUsd + jackpotContribution).toFixed(2)));
+    const nextFunds = Number((activeFunds - totalBet + result.totalWinUsd).toFixed(2));
     const popup = result.hitType === 'jackpot' || result.hitType === 'big_win' ? result.message : null;
 
     set((prev) => ({
-      playerFundsUsd: nextFunds,
+      realFundsUsd: prev.mode === 'real' ? nextFunds : prev.realFundsUsd,
+      playFundsUsd: prev.mode === 'play' ? nextFunds : prev.playFundsUsd,
       totalWageredUsd: Number((prev.totalWageredUsd + totalBet).toFixed(2)),
       jackpots: { ...prev.jackpots, [slot.id]: nextJackpot },
       lastReel: result.reel,
@@ -110,6 +123,7 @@ export const useCasinoStore = create<State>((set, get) => ({
           id: `${Date.now()}-${prev.spins.length}`,
           slotId: slot.id,
           slotName: slot.name,
+          mode: prev.mode,
           betPerLineUsd,
           totalBetUsd: totalBet,
           result,
@@ -125,14 +139,15 @@ export const useCasinoStore = create<State>((set, get) => ({
 
   requestWithdrawal: (usd) => {
     const s = get();
+    if (s.mode !== 'real') return { ok: false, message: 'Switch to Real mode to request withdrawals.' };
     if (usd <= 0) return { ok: false, message: 'Withdrawal must be > 0.' };
-    if (usd > s.playerFundsUsd) return { ok: false, message: 'Insufficient available player funds.' };
+    if (usd > s.realFundsUsd) return { ok: false, message: 'Insufficient available real funds.' };
 
     const unlocked = withdrawUnlocked(s.totalDepositsUsd, s.totalWageredUsd);
     const required = wagerRequiredUsd(s.totalDepositsUsd);
     if (!unlocked) return { ok: false, message: `Withdrawal locked. Need $${required.toLocaleString()} wagered (20x deposits).` };
 
-    set((prev) => ({ requestedWithdrawalUsd: Number((prev.requestedWithdrawalUsd + usd).toFixed(2)), playerFundsUsd: Number((prev.playerFundsUsd - usd).toFixed(2)) }));
+    set((prev) => ({ requestedWithdrawalUsd: Number((prev.requestedWithdrawalUsd + usd).toFixed(2)), realFundsUsd: Number((prev.realFundsUsd - usd).toFixed(2)) }));
     return { ok: true, message: `Withdrawal request submitted for manual review: $${usd.toLocaleString()}` };
   },
 
