@@ -18,8 +18,7 @@
     "jsx": "preserve",
     "incremental": true,
     "types": [
-      "node",
-      "@react-three/fiber"
+      "node"
     ],
     "plugins": [
       {
