@@ -1,13 +1,5 @@
-import dynamic from 'next/dynamic';
-import Dashboard from '@/components/dashboard';
-
-const DepthBg = dynamic(() => import('@/components/depth-bg'), { ssr: false });
+import SlotsDashboard from '@/components/slots-dashboard';
 
 export default function HomePage() {
-  return (
-    <div className="relative overflow-hidden">
-      <DepthBg />
-      <Dashboard />
-    </div>
-  );
+  return <SlotsDashboard />;
 }
