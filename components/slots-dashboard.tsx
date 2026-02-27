@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { FormEvent, useMemo, useState } from 'react';
 import { BrowserProvider, parseEther } from 'ethers';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -91,19 +92,26 @@ export default function SlotsDashboard() {
 
   return (
     <main className="mx-auto max-w-7xl p-5">
-      <div className="panel glow mb-4 flex flex-wrap items-center justify-between gap-3">
+      <motion.div initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} className="panel glow mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold">MOGG Slots — 20 Interactive Machines</h1>
           <p className="text-white/70">Deposit ETH directly to <span className="font-mono text-cyan-300">{TREASURY_DEPOSIT_ADDRESS}</span></p>
         </div>
         <button className="rounded-lg bg-cyan-400 px-4 py-2 font-semibold text-black" onClick={onConnect}>{wallet ? 'Wallet Connected' : 'Connect MetaMask'}</button>
-      </div>
+      </motion.div>
 
       <div className="grid gap-4 md:grid-cols-4 mb-4">
-        <div className="panel"><p className="text-white/70">Player Funds</p><p className="text-2xl font-bold">${playerFundsUsd.toLocaleString()}</p></div>
-        <div className="panel"><p className="text-white/70">Deposits</p><p className="text-2xl font-bold">${totalDepositsUsd.toLocaleString()}</p></div>
-        <div className="panel"><p className="text-white/70">Wagered</p><p className="text-2xl font-bold">${totalWageredUsd.toLocaleString()}</p></div>
-        <div className="panel"><p className="text-white/70">Withdrawal Unlock</p><p className="text-2xl font-bold">{p.progressPct}%</p></div>
+        {[
+          ['Player Funds', `$${playerFundsUsd.toLocaleString()}`],
+          ['Deposits', `$${totalDepositsUsd.toLocaleString()}`],
+          ['Wagered', `$${totalWageredUsd.toLocaleString()}`],
+          ['Withdrawal Unlock', `${p.progressPct}%`]
+        ].map((card, i) => (
+          <motion.div key={card[0]} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="panel">
+            <p className="text-white/70">{card[0]}</p>
+            <p className="text-2xl font-bold">{card[1]}</p>
+          </motion.div>
+        ))}
       </div>
 
       <div className="panel mb-4">
@@ -135,12 +143,23 @@ export default function SlotsDashboard() {
       <div className="panel mt-4">
         <h3 className="mb-2 font-semibold">20 Unique Slots (progressive jackpot up to $1,000,000)</h3>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-          {slots.map((s) => (
-            <button key={s.id} onClick={() => selectSlot(s.id)} className={`rounded-lg border px-3 py-2 text-left ${selectedSlotId === s.id ? 'border-cyan-400 bg-cyan-500/10' : 'border-white/15 bg-white/5'}`}>
+          {slots.map((s, i) => (
+            <motion.button
+              key={s.id}
+              onClick={() => selectSlot(s.id)}
+              whileHover={{ scale: 1.03, y: -2 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.015 }}
+              className={`rounded-lg border px-2 py-2 text-left ${selectedSlotId === s.id ? 'border-cyan-400 bg-cyan-500/10' : 'border-white/15 bg-white/5'}`}
+            >
+              <div className="relative h-20 w-full overflow-hidden rounded mb-2 border border-white/10">
+                <Image src={s.icon} alt={s.name} fill className="object-cover" sizes="220px" />
+              </div>
               <p className="font-semibold">{s.name}</p>
               <p className="text-xs text-white/70">Volatility: {s.volatility}</p>
-              <p className="text-xs text-emerald-300">Jackpot: ${Math.min(1_000_000, jackpots[s.id] ?? 0).toLocaleString()}</p>
-            </button>
+              <p className="text-xs" style={{ color: s.accent }}>Jackpot: ${Math.min(1_000_000, jackpots[s.id] ?? 0).toLocaleString()}</p>
+            </motion.button>
           ))}
         </div>
       </div>
@@ -149,8 +168,10 @@ export default function SlotsDashboard() {
         <h3 className="mb-3 font-semibold">Live Reel</h3>
         <div className="flex gap-3">
           {reel.map((col, i) => (
-            <motion.div key={i} initial={{ y: -20, opacity: 0.6 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.25 + i * 0.1 }} className="space-y-2">
-              {col.map((sym, j) => <div key={`${i}-${j}`} className="reel-cell">{sym}</div>)}
+            <motion.div key={i} initial={{ y: -36, opacity: 0.4, rotateX: -35 }} animate={{ y: 0, opacity: 1, rotateX: 0 }} transition={{ type: 'spring', stiffness: 220, damping: 18, delay: i * 0.05 }} className="space-y-2">
+              {col.map((sym, j) => (
+                <motion.div key={`${i}-${j}`} whileHover={{ scale: 1.08 }} className="reel-cell">{sym}</motion.div>
+              ))}
             </motion.div>
           ))}
         </div>
@@ -166,11 +187,11 @@ export default function SlotsDashboard() {
       <AnimatePresence>
         {popup ? (
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={dismissPopup}>
-            <div className="glow rounded-2xl border border-cyan-400/50 bg-slate-900 p-8 text-center">
+            <motion.div initial={{ rotate: -1.5 }} animate={{ rotate: [0, -1.5, 1.5, 0] }} transition={{ repeat: Infinity, duration: 0.9 }} className="glow rounded-2xl border border-cyan-400/50 bg-slate-900 p-8 text-center">
               <h2 className="text-3xl font-bold text-cyan-300">WIN ALERT</h2>
               <p className="mt-3 text-lg">{popup}</p>
               <p className="mt-4 text-xs text-white/60">Click anywhere to close</p>
-            </div>
+            </motion.div>
           </motion.div>
         ) : null}
       </AnimatePresence>

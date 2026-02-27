@@ -7,6 +7,8 @@ export type SlotTheme = {
   volatility: 'low' | 'mid' | 'high';
   baseRtp: number;
   jackpotSeedUsd: number;
+  icon: string;
+  accent: string;
 };
 
 export type SpinResult = {
@@ -19,35 +21,44 @@ export type SpinResult = {
   message: string;
 };
 
-const THEMES: SlotTheme[] = [
-  ['neon-district', 'Neon District', ['💎', '7️⃣', '⚡', '🦊', '🍒']],
-  ['dragon-vault', 'Dragon Vault', ['🐉', '🔥', '🪙', '🧧', '💠']],
-  ['deep-space', 'Deep Space', ['🪐', '🌌', '🚀', '👽', '⭐']],
-  ['pharaoh-gold', 'Pharaoh Gold', ['👑', '🦂', '☀️', '🪬', '🏺']],
-  ['samurai-storm', 'Samurai Storm', ['⚔️', '🎴', '⛩️', '🌀', '🐺']],
-  ['fruit-frenzy-x', 'Fruit Frenzy X', ['🍉', '🍋', '🍇', '🍒', '🍊']],
-  ['wild-west-cash', 'Wild West Cash', ['🤠', '🐎', '💰', '🧨', '⭐']],
-  ['cyber-racer', 'Cyber Racer', ['🏎️', '🧪', '🔋', '🛞', '⚡']],
-  ['tiki-tide', 'Tiki Tide', ['🌊', '🗿', '🥥', '🌺', '🐠']],
-  ['mythic-forge', 'Mythic Forge', ['🛡️', '🔨', '🐲', '🧿', '💍']],
-  ['moon-heist', 'Moon Heist', ['🌙', '🕶️', '💼', '💣', '💎']],
-  ['lotus-empire', 'Lotus Empire', ['🪷', '🐯', '💮', '🧿', '🪙']],
-  ['pirate-plunder', 'Pirate Plunder', ['🏴‍☠️', '🦜', '⚓', '🗺️', '💰']],
-  ['arctic-riches', 'Arctic Riches', ['❄️', '🐻', '🧊', '🌨️', '💎']],
-  ['aztec-prime', 'Aztec Prime', ['🗿', '🪙', '🐍', '☀️', '💠']],
-  ['phantom-circus', 'Phantom Circus', ['🎪', '🎭', '🃏', '✨', '🎟️']],
-  ['robotica-777', 'Robotica 777', ['🤖', '7️⃣', '⚙️', '🔩', '🧠']],
-  ['royal-sakura', 'Royal Sakura', ['🌸', '👘', '🦢', '💮', '👑']],
-  ['lava-kingdom', 'Lava Kingdom', ['🌋', '🔥', '🪨', '🐲', '💰']],
-  ['quantum-rush', 'Quantum Rush', ['🧬', '⚛️', '🌀', '💠', '✨']]
-].map((t, idx) => ({
-  id: t[0],
-  name: t[1],
-  symbols: t[2],
-  volatility: (idx % 3 === 0 ? 'high' : idx % 2 === 0 ? 'mid' : 'low') as SlotTheme['volatility'],
-  baseRtp: 0.94 + (idx % 4) * 0.01,
-  jackpotSeedUsd: 5000 + idx * 750
-}));
+type SlotSeed = [id: string, name: string, symbols: string[], icon: string, accent: string];
+
+const SLOT_SEEDS: SlotSeed[] = [
+  ['neon-district', 'Neon District', ['💎', '7️⃣', '⚡', '🦊', '🍒'], '/slots/neon-district.svg', '#22d3ee'],
+  ['dragon-vault', 'Dragon Vault', ['🐉', '🔥', '🪙', '🧧', '💠'], '/slots/dragon-vault.svg', '#f97316'],
+  ['deep-space', 'Deep Space', ['🪐', '🌌', '🚀', '👽', '⭐'], '/slots/deep-space.svg', '#818cf8'],
+  ['pharaoh-gold', 'Pharaoh Gold', ['👑', '🦂', '☀️', '🪬', '🏺'], '/slots/pharaoh-gold.svg', '#facc15'],
+  ['samurai-storm', 'Samurai Storm', ['⚔️', '🎴', '⛩️', '🌀', '🐺'], '/slots/samurai-storm.svg', '#fb7185'],
+  ['fruit-frenzy-x', 'Fruit Frenzy X', ['🍉', '🍋', '🍇', '🍒', '🍊'], '/slots/fruit-frenzy-x.svg', '#34d399'],
+  ['wild-west-cash', 'Wild West Cash', ['🤠', '🐎', '💰', '🧨', '⭐'], '/slots/wild-west-cash.svg', '#f59e0b'],
+  ['cyber-racer', 'Cyber Racer', ['🏎️', '🧪', '🔋', '🛞', '⚡'], '/slots/cyber-racer.svg', '#38bdf8'],
+  ['tiki-tide', 'Tiki Tide', ['🌊', '🗿', '🥥', '🌺', '🐠'], '/slots/tiki-tide.svg', '#2dd4bf'],
+  ['mythic-forge', 'Mythic Forge', ['🛡️', '🔨', '🐲', '🧿', '💍'], '/slots/mythic-forge.svg', '#a78bfa'],
+  ['moon-heist', 'Moon Heist', ['🌙', '🕶️', '💼', '💣', '💎'], '/slots/moon-heist.svg', '#c084fc'],
+  ['lotus-empire', 'Lotus Empire', ['🪷', '🐯', '💮', '🧿', '🪙'], '/slots/lotus-empire.svg', '#f472b6'],
+  ['pirate-plunder', 'Pirate Plunder', ['🏴‍☠️', '🦜', '⚓', '🗺️', '💰'], '/slots/pirate-plunder.svg', '#60a5fa'],
+  ['arctic-riches', 'Arctic Riches', ['❄️', '🐻', '🧊', '🌨️', '💎'], '/slots/arctic-riches.svg', '#67e8f9'],
+  ['aztec-prime', 'Aztec Prime', ['🗿', '🪙', '🐍', '☀️', '💠'], '/slots/aztec-prime.svg', '#84cc16'],
+  ['phantom-circus', 'Phantom Circus', ['🎪', '🎭', '🃏', '✨', '🎟️'], '/slots/phantom-circus.svg', '#e879f9'],
+  ['robotica-777', 'Robotica 777', ['🤖', '7️⃣', '⚙️', '🔩', '🧠'], '/slots/robotica-777.svg', '#93c5fd'],
+  ['royal-sakura', 'Royal Sakura', ['🌸', '👘', '🦢', '💮', '👑'], '/slots/royal-sakura.svg', '#fda4af'],
+  ['lava-kingdom', 'Lava Kingdom', ['🌋', '🔥', '🪨', '🐲', '💰'], '/slots/lava-kingdom.svg', '#fb923c'],
+  ['quantum-rush', 'Quantum Rush', ['🧬', '⚛️', '🌀', '💠', '✨'], '/slots/quantum-rush.svg', '#22d3ee']
+];
+
+const THEMES: SlotTheme[] = SLOT_SEEDS.map((seed, idx) => {
+  const [id, name, symbols, icon, accent] = seed;
+  return {
+    id,
+    name,
+    symbols,
+    icon,
+    accent,
+    volatility: (idx % 3 === 0 ? 'high' : idx % 2 === 0 ? 'mid' : 'low') as SlotTheme['volatility'],
+    baseRtp: 0.94 + (idx % 4) * 0.01,
+    jackpotSeedUsd: 5000 + idx * 750
+  };
+});
 
 export function getAllSlots() {
   return THEMES;
