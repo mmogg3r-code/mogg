@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { parseUnits, formatUnits, BrowserProvider, Contract } from "ethers";
-import { TOKENS } from "@/lib/tokens";
+import { TOKENS } from "../lib/tokens";
 
 const UNISWAP_V2_SEPOLIA_ROUTER = "0xeE567Fe1712Faf6149d80dA1E6934E354124CfE3";
 const ROUTER_ABI = [
