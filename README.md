@@ -21,6 +21,6 @@ Open `http://localhost:3000`.
 
 ## Notes
 
-- Default token list includes Sepolia WETH and USDC addresses.
+- Default token list includes Sepolia WETH, USDC, and `0x703E3dF75127Ea2f52BF36C543E85F896B882306` (as `TEST`).
 - This app is for testnet/demo usage.
 - Always test with small amounts on Sepolia.

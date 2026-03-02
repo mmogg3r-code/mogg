@@ -14,7 +14,8 @@ export default function SwapCard() {
   const [wallet, setWallet] = useState(null);
   const [chainId, setChainId] = useState(null);
   const [amountIn, setAmountIn] = useState("0.01");
-  const [selectedOut, setSelectedOut] = useState(TOKENS[1]);
+  const defaultToken = TOKENS.find((token) => token.address.toLowerCase() === "0x703e3df75127ea2f52bf36c543e85f896b882306".toLowerCase()) || TOKENS[1];
+  const [selectedOut, setSelectedOut] = useState(defaultToken);
   const [quote, setQuote] = useState("-");
   const [status, setStatus] = useState("Connect wallet to start.");
   const [loading, setLoading] = useState(false);
@@ -104,6 +105,7 @@ export default function SwapCard() {
       </div>
 
       <p className="hint">ETH ➜ Token swaps on Sepolia testnet.</p>
+      <p className="hint">Includes token 0x703E3dF75127Ea2f52BF36C543E85F896B882306.</p>
       {wallet ? <p className="hint">Wallet: {wallet}</p> : null}
       {invalidNetwork ? (
         <p className="error">
