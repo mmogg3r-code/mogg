@@ -16,6 +16,17 @@ Current deployed address used by default in the UI:
 
 You can still replace it in the input field if you deploy another instance.
 
+
+## Wallet connections
+
+The frontend now supports multiple injected EVM providers:
+
+- MetaMask / generic `window.ethereum`
+- Phantom EVM (`window.phantom.ethereum`)
+- Axiom (tries `window.axiom.ethereum` then `window.axiom`)
+
+Use the **Wallet Provider** dropdown before clicking **Connect Wallet**.
+
 ## 1) Install
 
 ```bash

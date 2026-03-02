@@ -58,3 +58,13 @@ button.active {
   color: #c7d2ff;
   font-size: 12px;
 }
+
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #2f3961;
+  border-radius: 8px;
+  background: #0f1529;
+  color: #fff;
+  margin-bottom: 10px;
+}

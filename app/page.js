@@ -19,9 +19,33 @@ const contractAbi = [
 
 const deployedAddress = '0x98719d465A56242d98589085E5D608D80d10b631';
 
+function detectProviders() {
+  if (typeof window === 'undefined') return [];
+
+  const providers = [];
+
+  const metamaskProvider = window.ethereum;
+  if (metamaskProvider) {
+    providers.push({ id: 'metamask', label: 'MetaMask / EVM', provider: metamaskProvider });
+  }
+
+  const phantomProvider = window.phantom?.ethereum;
+  if (phantomProvider) {
+    providers.push({ id: 'phantom', label: 'Phantom (EVM)', provider: phantomProvider });
+  }
+
+  const axiomProvider = window.axiom?.ethereum || window.axiom;
+  if (axiomProvider?.request) {
+    providers.push({ id: 'axiom', label: 'Axiom', provider: axiomProvider });
+  }
+
+  return providers;
+}
+
 export default function HomePage() {
   const [walletAddress, setWalletAddress] = useState('');
   const [contractAddress, setContractAddress] = useState(deployedAddress);
+  const [selectedProviderId, setSelectedProviderId] = useState('metamask');
   const [buyEth, setBuyEth] = useState('0.01');
   const [sellAmount, setSellAmount] = useState('10');
   const [betAmount, setBetAmount] = useState('0.005');
@@ -29,7 +53,7 @@ export default function HomePage() {
   const [withdrawEthAmount, setWithdrawEthAmount] = useState('0.01');
   const [rescueTokenAddress, setRescueTokenAddress] = useState('0x0000000000000000000000000000000000000000');
   const [rescueTokenAmount, setRescueTokenAmount] = useState('1');
-  const [status, setStatus] = useState('Connect wallet and click Refresh Stats.');
+  const [status, setStatus] = useState('Select provider, connect wallet, and click Refresh Stats.');
   const [balances, setBalances] = useState({
     token: '0',
     contractEth: '0',
@@ -39,33 +63,45 @@ export default function HomePage() {
     owner: '0x0000000000000000000000000000000000000000'
   });
 
-  const hasEthereum = typeof window !== 'undefined' && window.ethereum;
+  const availableProviders = useMemo(() => detectProviders(), []);
+
+  const selectedProvider = useMemo(() => {
+    const found = availableProviders.find((p) => p.id === selectedProviderId);
+    return found?.provider || availableProviders[0]?.provider || null;
+  }, [availableProviders, selectedProviderId]);
+
+  const selectedProviderLabel = useMemo(() => {
+    const found = availableProviders.find((p) => p.id === selectedProviderId);
+    return found?.label || availableProviders[0]?.label || 'None';
+  }, [availableProviders, selectedProviderId]);
 
   const contract = useMemo(() => {
-    if (!hasEthereum || !ethers.isAddress(contractAddress)) return null;
-    const provider = new ethers.BrowserProvider(window.ethereum);
+    if (!selectedProvider || !ethers.isAddress(contractAddress)) return null;
+    const provider = new ethers.BrowserProvider(selectedProvider);
     return new ethers.Contract(contractAddress, contractAbi, provider);
-  }, [contractAddress, hasEthereum]);
+  }, [contractAddress, selectedProvider]);
 
   const isOwner = walletAddress && balances.owner && walletAddress.toLowerCase() === balances.owner.toLowerCase();
 
   async function connectWallet() {
     try {
-      if (!hasEthereum) throw new Error('No injected wallet found. Install MetaMask.');
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      if (!selectedProvider) {
+        throw new Error('No compatible wallet provider found. Install MetaMask, Phantom EVM, or Axiom.');
+      }
+      const provider = new ethers.BrowserProvider(selectedProvider);
       const accounts = await provider.send('eth_requestAccounts', []);
       setWalletAddress(accounts[0] || '');
-      setStatus('Wallet connected.');
+      setStatus(`Wallet connected with ${selectedProviderLabel}.`);
     } catch (error) {
       setStatus(`Connect failed: ${error.message}`);
     }
   }
 
   async function withSigner() {
-    if (!hasEthereum) throw new Error('No injected wallet found.');
+    if (!selectedProvider) throw new Error('No wallet provider selected/found.');
     if (!ethers.isAddress(contractAddress)) throw new Error('Enter a valid deployed contract address.');
 
-    const provider = new ethers.BrowserProvider(window.ethereum);
+    const provider = new ethers.BrowserProvider(selectedProvider);
     const signer = await provider.getSigner();
     return new ethers.Contract(contractAddress, contractAbi, signer);
   }
@@ -165,6 +201,22 @@ export default function HomePage() {
       <h1>Crypto Gambling + Token Swap DApp</h1>
 
       <section className="card">
+        <label>Wallet Provider</label>
+        <select
+          value={selectedProviderId}
+          onChange={(e) => setSelectedProviderId(e.target.value)}
+          disabled={availableProviders.length === 0}
+        >
+          {availableProviders.map((p) => (
+            <option key={p.id} value={p.id}>{p.label}</option>
+          ))}
+        </select>
+        {availableProviders.length === 0 ? (
+          <p className="hint">No provider detected. Install MetaMask, Phantom EVM, or Axiom wallet.</p>
+        ) : (
+          <p className="hint">Selected provider: {selectedProviderLabel}</p>
+        )}
+
         <button onClick={connectWallet}>Connect Wallet</button>
         <p><strong>Wallet:</strong> {walletAddress || 'Not connected'}</p>
 
