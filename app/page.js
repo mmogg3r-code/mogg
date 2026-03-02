@@ -13,25 +13,30 @@ const contractAbi = [
   'function getContractEthBalance() external view returns (uint256)',
   'function getTokenBalance(address account) external view returns (uint256)',
   'function emergencyWithdrawETH(uint256 amount) external',
-  'function emergencyWithdrawToken(address erc20, uint256 amount) external'
+  'function emergencyWithdrawToken(address erc20, uint256 amount) external',
+  'function owner() external view returns (address)'
 ];
 
-const defaultAddress = '0x0000000000000000000000000000000000000000';
+const deployedAddress = '0x98719d465A56242d98589085E5D608D80d10b631';
 
 export default function HomePage() {
   const [walletAddress, setWalletAddress] = useState('');
-  const [contractAddress, setContractAddress] = useState(defaultAddress);
+  const [contractAddress, setContractAddress] = useState(deployedAddress);
   const [buyEth, setBuyEth] = useState('0.01');
   const [sellAmount, setSellAmount] = useState('10');
   const [betAmount, setBetAmount] = useState('0.005');
   const [betHeads, setBetHeads] = useState(true);
-  const [status, setStatus] = useState('Connect wallet and set deployed contract address.');
+  const [withdrawEthAmount, setWithdrawEthAmount] = useState('0.01');
+  const [rescueTokenAddress, setRescueTokenAddress] = useState('0x0000000000000000000000000000000000000000');
+  const [rescueTokenAmount, setRescueTokenAmount] = useState('1');
+  const [status, setStatus] = useState('Connect wallet and click Refresh Stats.');
   const [balances, setBalances] = useState({
     token: '0',
     contractEth: '0',
     tokenPriceWei: '0',
     houseFeeBps: '0',
-    tokenAddress: defaultAddress
+    tokenAddress: '0x0000000000000000000000000000000000000000',
+    owner: '0x0000000000000000000000000000000000000000'
   });
 
   const hasEthereum = typeof window !== 'undefined' && window.ethereum;
@@ -41,6 +46,8 @@ export default function HomePage() {
     const provider = new ethers.BrowserProvider(window.ethereum);
     return new ethers.Contract(contractAddress, contractAbi, provider);
   }, [contractAddress, hasEthereum]);
+
+  const isOwner = walletAddress && balances.owner && walletAddress.toLowerCase() === balances.owner.toLowerCase();
 
   async function connectWallet() {
     try {
@@ -66,12 +73,13 @@ export default function HomePage() {
   async function refreshStats() {
     try {
       if (!contract || !walletAddress) throw new Error('Set contract address and connect wallet first.');
-      const [token, tokenPriceWei, houseFeeBps, contractEth, userTokenBalance] = await Promise.all([
+      const [token, tokenPriceWei, houseFeeBps, contractEth, userTokenBalance, owner] = await Promise.all([
         contract.token(),
         contract.tokenPriceWei(),
         contract.houseFeeBps(),
         contract.getContractEthBalance(),
-        contract.getTokenBalance(walletAddress)
+        contract.getTokenBalance(walletAddress),
+        contract.owner()
       ]);
 
       setBalances({
@@ -79,7 +87,8 @@ export default function HomePage() {
         tokenPriceWei: tokenPriceWei.toString(),
         houseFeeBps: houseFeeBps.toString(),
         contractEth: ethers.formatEther(contractEth),
-        token: ethers.formatUnits(userTokenBalance, 18)
+        token: ethers.formatUnits(userTokenBalance, 18),
+        owner
       });
 
       setStatus('Stats refreshed.');
@@ -124,6 +133,33 @@ export default function HomePage() {
     }
   }
 
+  async function emergencyWithdrawETH() {
+    try {
+      const c = await withSigner();
+      const tx = await c.emergencyWithdrawETH(ethers.parseEther(withdrawEthAmount || '0'));
+      await tx.wait();
+      setStatus('Admin ETH withdraw succeeded.');
+      await refreshStats();
+    } catch (error) {
+      setStatus(`Admin ETH withdraw failed: ${error.message}`);
+    }
+  }
+
+  async function emergencyWithdrawToken() {
+    try {
+      const c = await withSigner();
+      const tx = await c.emergencyWithdrawToken(
+        rescueTokenAddress,
+        ethers.parseUnits(rescueTokenAmount || '0', 18)
+      );
+      await tx.wait();
+      setStatus('Admin token rescue succeeded.');
+      await refreshStats();
+    } catch (error) {
+      setStatus(`Admin token rescue failed: ${error.message}`);
+    }
+  }
+
   return (
     <main className="container">
       <h1>Crypto Gambling + Token Swap DApp</h1>
@@ -134,6 +170,8 @@ export default function HomePage() {
 
         <label>Contract Address</label>
         <input value={contractAddress} onChange={(e) => setContractAddress(e.target.value.trim())} />
+        <small className="hint">Default set to deployed contract: {deployedAddress}</small>
+        <br />
         <button onClick={refreshStats}>Refresh Stats</button>
       </section>
 
@@ -162,6 +200,23 @@ export default function HomePage() {
           </div>
           <button onClick={play}>Play</button>
         </div>
+      </section>
+
+      <section className="card">
+        <h2>Admin / Unstuck Controls</h2>
+        <p><strong>Contract Owner:</strong> {balances.owner}</p>
+        <p><strong>Connected Wallet is Owner:</strong> {isOwner ? 'Yes' : 'No'}</p>
+
+        <label>Emergency ETH Withdraw (owner only)</label>
+        <input value={withdrawEthAmount} onChange={(e) => setWithdrawEthAmount(e.target.value)} />
+        <button onClick={emergencyWithdrawETH}>Withdraw ETH</button>
+
+        <label>Rescue ERC20 Address (owner only)</label>
+        <input value={rescueTokenAddress} onChange={(e) => setRescueTokenAddress(e.target.value.trim())} />
+
+        <label>Rescue ERC20 Amount (18 decimals expected)</label>
+        <input value={rescueTokenAmount} onChange={(e) => setRescueTokenAmount(e.target.value)} />
+        <button onClick={emergencyWithdrawToken}>Rescue ERC20</button>
       </section>
 
       <section className="card">

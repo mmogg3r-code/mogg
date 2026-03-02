@@ -8,6 +8,14 @@ This repository includes:
   - Admin emergency ETH withdraw and ERC-20 unstuck rescue.
 - A Next.js / React frontend (`app/page.js`) that connects with MetaMask and calls contract methods.
 
+## Deployed contract address
+
+Current deployed address used by default in the UI:
+
+`0x98719d465A56242d98589085E5D608D80d10b631`
+
+You can still replace it in the input field if you deploy another instance.
+
 ## 1) Install
 
 ```bash

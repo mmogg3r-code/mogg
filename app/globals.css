@@ -51,3 +51,10 @@ button.active {
   border-color: #13a06f;
 }
 .row { margin-bottom: 10px; }
+
+.hint {
+  display: inline-block;
+  margin: 6px 0 12px;
+  color: #c7d2ff;
+  font-size: 12px;
+}
