@@ -1,18 +1,92 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+/// @notice Minimal Ownable implementation to keep this contract self-contained.
+abstract contract Ownable {
+    address private _owner;
 
-contract HouseToken is ERC20, Ownable {
-    constructor(address owner_) ERC20("House Gamble Token", "HGT") Ownable(owner_) {}
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+    constructor(address initialOwner) {
+        require(initialOwner != address(0), "owner=0");
+        _owner = initialOwner;
+        emit OwnershipTransferred(address(0), initialOwner);
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == _owner, "not owner");
+        _;
+    }
+
+    function owner() public view returns (address) {
+        return _owner;
+    }
+}
+
+/// @notice Minimal ERC20 implementation for the house token.
+contract HouseToken is Ownable {
+    string public constant name = "House Gamble Token";
+    string public constant symbol = "HGT";
+    uint8 public constant decimals = 18;
+
+    uint256 public totalSupply;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    constructor(address owner_) Ownable(owner_) {}
+
+    function transfer(address to, uint256 amount) external returns (bool) {
+        _transfer(msg.sender, to, amount);
+        return true;
+    }
+
+    function approve(address spender, uint256 amount) external returns (bool) {
+        allowance[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        uint256 allowed = allowance[from][msg.sender];
+        require(allowed >= amount, "allowance");
+        if (allowed != type(uint256).max) {
+            allowance[from][msg.sender] = allowed - amount;
+            emit Approval(from, msg.sender, allowance[from][msg.sender]);
+        }
+        _transfer(from, to, amount);
+        return true;
+    }
 
     function mint(address to, uint256 amount) external onlyOwner {
-        _mint(to, amount);
+        require(to != address(0), "to=0");
+        totalSupply += amount;
+        balanceOf[to] += amount;
+        emit Transfer(address(0), to, amount);
     }
 
     function burn(address from, uint256 amount) external onlyOwner {
-        _burn(from, amount);
+        require(from != address(0), "from=0");
+        uint256 bal = balanceOf[from];
+        require(bal >= amount, "balance");
+        unchecked {
+            balanceOf[from] = bal - amount;
+            totalSupply -= amount;
+        }
+        emit Transfer(from, address(0), amount);
+    }
+
+    function _transfer(address from, address to, uint256 amount) internal {
+        require(to != address(0), "to=0");
+        uint256 bal = balanceOf[from];
+        require(bal >= amount, "balance");
+        unchecked {
+            balanceOf[from] = bal - amount;
+            balanceOf[to] += amount;
+        }
+        emit Transfer(from, to, amount);
     }
 }
 

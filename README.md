@@ -34,11 +34,6 @@ Then visit `http://localhost:3000`.
 
 Use your preferred Solidity tooling (Hardhat/Foundry/Remix), compile with Solidity `^0.8.24`, and deploy `CryptoGambleSwap`.
 
-Dependencies used by contract:
-
-- `@openzeppelin/contracts/token/ERC20/ERC20.sol`
-- `@openzeppelin/contracts/access/Ownable.sol`
-
 After deployment, paste the contract address into the frontend.
 
 ## Security note
