@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { parseUnits, formatUnits, BrowserProvider, Contract } from "ethers";
 import { TOKENS } from "../lib/tokens";
 
+const SEPOLIA_CHAIN_ID = 11155111;
+const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7";
 const UNISWAP_V2_SEPOLIA_ROUTER = "0xeE567Fe1712Faf6149d80dA1E6934E354124CfE3";
 const ROUTER_ABI = [
   "function getAmountsOut(uint amountIn, address[] memory path) external view returns (uint[] memory amounts)",
@@ -20,7 +22,7 @@ export default function SwapCard() {
   const [status, setStatus] = useState("Connect wallet to start.");
   const [loading, setLoading] = useState(false);
 
-  const invalidNetwork = !!wallet && chainId !== 11155111;
+  const invalidNetwork = !!wallet && chainId !== SEPOLIA_CHAIN_ID;
   const path = useMemo(() => [TOKENS[0].address, selectedOut.address], [selectedOut.address]);
 
   const getEthereum = () => window.ethereum;
@@ -35,9 +37,15 @@ export default function SwapCard() {
     try {
       const accounts = await ethereum.request({ method: "eth_requestAccounts" });
       const chain = await ethereum.request({ method: "eth_chainId" });
+      const parsedChainId = Number.parseInt(chain, 16);
       setWallet(accounts[0]);
-      setChainId(Number.parseInt(chain, 16));
-      setStatus("Wallet connected.");
+      setChainId(parsedChainId);
+      if (parsedChainId !== SEPOLIA_CHAIN_ID) {
+        setStatus("Wallet connected. Please switch to Sepolia to continue.");
+        return;
+      }
+
+      setStatus("Wallet connected to Sepolia.");
     } catch (error) {
       setStatus(`Wallet connection failed: ${error.message}`);
     }
@@ -46,8 +54,9 @@ export default function SwapCard() {
   const switchToSepolia = async () => {
     const ethereum = getEthereum();
     if (!ethereum) return;
-    await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0xaa36a7" }] });
-    setChainId(11155111);
+    await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }] });
+    setChainId(SEPOLIA_CHAIN_ID);
+    setStatus("Switched to Sepolia.");
   };
 
   const getProvider = async () => {
@@ -60,6 +69,11 @@ export default function SwapCard() {
     setLoading(true);
     try {
       const provider = await getProvider();
+      const network = await provider.getNetwork();
+      if (Number(network.chainId) !== SEPOLIA_CHAIN_ID) {
+        throw new Error("Sepolia network required for quotes.");
+      }
+
       const router = new Contract(UNISWAP_V2_SEPOLIA_ROUTER, ROUTER_ABI, provider);
       const weiAmount = parseUnits(amountIn, 18);
       const amounts = await router.getAmountsOut(weiAmount, path);
@@ -77,6 +91,11 @@ export default function SwapCard() {
     setLoading(true);
     try {
       const provider = await getProvider();
+      const network = await provider.getNetwork();
+      if (Number(network.chainId) !== SEPOLIA_CHAIN_ID) {
+        throw new Error("Sepolia network required for swaps.");
+      }
+
       const signer = await provider.getSigner();
       const router = new Contract(UNISWAP_V2_SEPOLIA_ROUTER, ROUTER_ABI, signer);
       const recipient = wallet || (await signer.getAddress());
