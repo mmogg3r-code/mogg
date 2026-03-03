@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reset the Odds | Coinflip Demo</title>
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        margin: 0;
+        font-family: Inter, Segoe UI, Roboto, sans-serif;
+        background: radial-gradient(circle at 20% 20%, #12203e, transparent 45%), radial-gradient(circle at 80% 30%, #281347, transparent 38%), #070912;
+        color: #e5f6ff;
+      }
+      .wrap { max-width: 980px; margin: 2rem auto; padding: 1rem; display: grid; gap: 1rem; }
+      .card {
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(53, 242, 255, 0.3);
+        border-radius: 16px;
+        padding: 1rem;
+        backdrop-filter: blur(8px);
+      }
+      h1,h2,p { margin-top: 0; }
+      .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:.7rem; }
+      .mini { border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:.75rem; }
+      .controls { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:.7rem; align-items:end; }
+      label { display:grid; gap:.25rem; font-size:.9rem; }
+      input,select,button { padding:.6rem; border-radius:10px; border:1px solid rgba(53, 242, 255, .45); background:rgba(10,15,30,.95); color:#e5f6ff; }
+      button { cursor:pointer; }
+      .status { color:#b8d8eb; font-size:.9rem; }
+      ul { list-style:none; padding:0; margin:0; display:grid; gap:.4rem; }
+      li { background:rgba(255,255,255,.03); border-radius:8px; padding:.5rem; display:grid; grid-template-columns: repeat(4,1fr); gap:.5rem; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="card">
+        <h1>Reset the Odds</h1>
+        <p>Responsible-gaming awareness and a provably-fair coinflip demo.</p>
+      </section>
+
+      <section class="card grid">
+        <article class="mini"><h2>Reality Check</h2><p>Chasing losses is a trap. Every flip is independent.</p></article>
+        <article class="mini"><h2>RTP Truth</h2><p>RTP is a long-run expectation, never a short-term promise.</p></article>
+        <article class="mini"><h2>Support</h2><p>If you cannot stop, set limits and seek help immediately.</p></article>
+      </section>
+
+      <section class="card">
+        <h2>Coinflip Demo (Fallback UI)</h2>
+        <div id="meta" class="status">Creating session…</div>
+        <div class="controls">
+          <label>Bet amount<input id="amount" type="number" min="1" value="25" /></label>
+          <label>Side
+            <select id="side"><option value="heads">Heads</option><option value="tails">Tails</option></select>
+          </label>
+          <button id="flip">Flip</button>
+          <button id="withdraw" disabled>Withdraw</button>
+          <button id="new">New session</button>
+        </div>
+        <p id="status" class="status"></p>
+      </section>
+
+      <section class="card">
+        <h2>Recent Hands</h2>
+        <ul id="history"><li>No hands yet.</li></ul>
+      </section>
+    </main>
+
+    <script>
+      const API = '/api';
+      let session = null;
+      let history = [];
+
+      const el = {
+        amount: document.getElementById('amount'),
+        side: document.getElementById('side'),
+        status: document.getElementById('status'),
+        history: document.getElementById('history'),
+        meta: document.getElementById('meta'),
+        withdraw: document.getElementById('withdraw')
+      };
+
+      const render = () => {
+        const hands = session?.handsPlayed ?? 0;
+        const bankroll = Number(session?.bankroll ?? 0).toFixed(2);
+        el.meta.textContent = `Server seed hash: ${session?.serverSeedHash || 'loading...'} | Hands: ${hands}/10 | Bankroll: ${bankroll}`;
+        el.withdraw.disabled = hands < 10;
+        if (!history.length) {
+          el.history.innerHTML = '<li>No hands yet.</li>';
+          return;
+        }
+        el.history.innerHTML = history.map((h) => `<li><span>#${h.nonce}</span><span>${h.side}</span><span>${h.result}</span><span>${h.won ? '+' : '-'}${h.amount}</span></li>`).join('');
+      };
+
+      const createSession = async () => {
+        const r = await fetch(`${API}/game/session`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
+        session = await r.json();
+        history = [];
+        el.status.textContent = 'Session ready.';
+        render();
+      };
+
+      document.getElementById('flip').onclick = async () => {
+        if (!session) return;
+        const r = await fetch(`${API}/game/flip`, {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ sessionId: session.sessionId, amount: Number(el.amount.value), side: el.side.value })
+        });
+        const data = await r.json();
+        if (!r.ok) { el.status.textContent = data.error || 'Flip failed'; return; }
+        session = { ...session, bankroll: data.bankroll, handsPlayed: data.handsPlayed };
+        history = [data.hand, ...history].slice(0, 10);
+        el.status.textContent = data.hand.won ? `Won ${data.hand.amount.toFixed(2)}.` : `Lost ${data.hand.amount.toFixed(2)}.`;
+        render();
+      };
+
+      document.getElementById('withdraw').onclick = async () => {
+        const r = await fetch(`${API}/game/withdraw`, {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ sessionId: session.sessionId })
+        });
+        const data = await r.json();
+        el.status.textContent = r.ok ? `Withdraw approved: ${Number(data.amount).toFixed(2)}.` : (data.error || 'Withdraw failed');
+      };
+
+      document.getElementById('new').onclick = createSession;
+      createSession().catch(() => {
+        el.status.textContent = 'Backend API unavailable.';
+      });
+    </script>
+  </body>
+</html>

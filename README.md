@@ -50,7 +50,7 @@ npm install
 npm run build
 ```
 
-The backend auto-serves `frontend/dist` at `/` when present, and falls back to an informative root message when not built yet.
+The backend auto-serves `frontend/dist` at `/` when present, and if it is missing, serves a built-in fallback UI from `backend/public` so the root still loads a working interface.
 
 ## Fairness approach
 

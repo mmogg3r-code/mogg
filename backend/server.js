@@ -160,6 +160,8 @@ const __dirname = path.dirname(__filename);
 const frontendDistPath = path.resolve(__dirname, '../frontend/dist');
 const frontendIndexPath = path.join(frontendDistPath, 'index.html');
 
+const fallbackUiPath = path.resolve(__dirname, './public/index.html');
+
 if (fs.existsSync(frontendIndexPath)) {
   app.use(express.static(frontendDistPath));
 
@@ -169,6 +171,16 @@ if (fs.existsSync(frontendIndexPath)) {
     }
 
     return res.sendFile(frontendIndexPath);
+  });
+} else if (fs.existsSync(fallbackUiPath)) {
+  app.use(express.static(path.resolve(__dirname, './public')));
+
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+
+    return res.sendFile(fallbackUiPath);
   });
 } else {
   app.get('/', (_req, res) => {
