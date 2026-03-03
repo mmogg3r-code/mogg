@@ -40,6 +40,18 @@ npm run dev
 
 Frontend runs on `http://localhost:5173` and calls the backend at `http://localhost:3001` by default.
 
+### Single-service deployment (fixes `Cannot GET /`)
+
+If your host runs only the Express app, build the frontend and keep `frontend/dist` next to `backend/`:
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+The backend auto-serves `frontend/dist` at `/` when present, and falls back to an informative root message when not built yet.
+
 ## Fairness approach
 
 Each game session is generated with:

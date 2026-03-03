@@ -1,4 +1,7 @@
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 
@@ -151,6 +154,29 @@ app.get('/api/game/history/:sessionId', (req, res) => {
     clientSeed: session.clientSeed
   });
 });
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendDistPath = path.resolve(__dirname, '../frontend/dist');
+const frontendIndexPath = path.join(frontendDistPath, 'index.html');
+
+if (fs.existsSync(frontendIndexPath)) {
+  app.use(express.static(frontendDistPath));
+
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+
+    return res.sendFile(frontendIndexPath);
+  });
+} else {
+  app.get('/', (_req, res) => {
+    res.type('text/plain').send(
+      'Backend is running. Build and deploy frontend/dist to serve the UI from this root. API is available under /api/*.'
+    );
+  });
+}
 
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
