@@ -37,6 +37,16 @@ function App() {
     []
   );
 
+  const securityFeatures = useMemo(
+    () => [
+      '2-step ownership transfer for admin key changes (Ownable2Step).',
+      'Pause / unpause controls for incident response.',
+      'Reentrancy guard on withdraw paths.',
+      'Configurable max single-withdrawal limit + emergency withdraw while paused.'
+    ],
+    []
+  );
+
   const createSession = async () => {
     try {
       const response = await fetch(`${API_URL}/api/game/session`, {
@@ -113,8 +123,8 @@ function App() {
         <p className="eyebrow">Responsible Gaming</p>
         <h1>Reset the Odds</h1>
         <p>
-          A minimal, professional awareness page for people caught in the cycle of chasing losses.
-          You cannot "force" recovery with RTP theory in short sessions.
+          A professional awareness demo for users stuck in loss-chasing behavior. RTP does not guarantee
+          short-session recovery.
         </p>
       </header>
 
@@ -164,6 +174,18 @@ function App() {
         </div>
       </section>
 
+      <section className="glass security-grid">
+        <div>
+          <h2>On-chain Treasury Security</h2>
+          <p className="meta">Smart contract hardening designed for investor/customer demos.</p>
+        </div>
+        {securityFeatures.map((item) => (
+          <article className="security-card" key={item}>
+            {item}
+          </article>
+        ))}
+      </section>
+
       <section className="glass">
         <h2>Recent Hands</h2>
         <ul className="history">
@@ -172,14 +194,15 @@ function App() {
               <span>#{hand.nonce}</span>
               <span>{hand.side}</span>
               <span>{hand.result}</span>
-              <span className={hand.won ? 'win' : 'lose'}>{hand.won ? '+' : '-'}{hand.amount}</span>
+              <span className={hand.won ? 'win' : 'lose'}>
+                {hand.won ? '+' : '-'}
+                {hand.amount}
+              </span>
             </li>
           ))}
           {!history.length && <li>No hands yet.</li>}
         </ul>
-        {withdrawResult && (
-          <pre className="reveal">{JSON.stringify(withdrawResult.reveal, null, 2)}</pre>
-        )}
+        {withdrawResult && <pre className="reveal">{JSON.stringify(withdrawResult.reveal, null, 2)}</pre>}
       </section>
     </div>
   );

@@ -153,3 +153,19 @@ button.ghost {
     grid-template-columns: 1fr;
   }
 }
+
+
+.security-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.7rem;
+  align-items: stretch;
+}
+
+.security-card {
+  border: 1px solid rgba(53, 242, 255, 0.26);
+  border-radius: 10px;
+  padding: 0.8rem;
+  background: rgba(12, 18, 35, 0.7);
+  font-size: 0.92rem;
+}

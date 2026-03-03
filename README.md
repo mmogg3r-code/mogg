@@ -71,6 +71,8 @@ For parity with your requested flow, the demo enforces a **minimum of 10 hands**
 
 `contracts/FairCoinflipBank.sol` includes:
 
-- payable deposit via `receive()`
-- `withdraw(address,uint256)` restricted by `onlyOwner`
-- owner defaults to deployer wallet
+- payable deposit via `receive()` (disabled while paused)
+- `withdraw(address,uint256)` restricted to admin and capped by `maxSingleWithdrawal`
+- `emergencyWithdrawAll(address)` available only while paused
+- `pause()` / `unpause()` incident controls
+- 2-step ownership transfer via `Ownable2Step` for safer admin key rotation
