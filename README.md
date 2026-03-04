@@ -50,7 +50,7 @@ npm install
 npm run build
 ```
 
-The backend auto-serves `frontend/dist` at `/` when present, and if it is missing, serves a built-in fallback UI from `backend/public` so the root still loads a working interface.
+The backend auto-serves `frontend/dist` at `/` when present. If it is missing, it serves `backend/public/index.html` when available; if that file is absent too, Express serves a built-in HTML fallback so `/` never returns a raw text error.
 
 ## Fairness approach
 

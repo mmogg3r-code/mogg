@@ -162,6 +162,38 @@ const frontendIndexPath = path.join(frontendDistPath, 'index.html');
 
 const fallbackUiPath = path.resolve(__dirname, './public/index.html');
 
+
+const DEFAULT_FALLBACK_HTML = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reset the Odds | Backend Running</title>
+    <style>
+      body { margin:0; font-family: Inter, Segoe UI, Roboto, sans-serif; background:#070912; color:#e5f6ff; }
+      .wrap { max-width:900px; margin:3rem auto; padding:1rem; }
+      .card { background:rgba(15,23,42,.75); border:1px solid rgba(53,242,255,.3); border-radius:14px; padding:1rem; }
+      a { color:#35f2ff; }
+      code { background: rgba(255,255,255,.08); padding:.1rem .35rem; border-radius:6px; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="card">
+        <h1>Reset the Odds</h1>
+        <p>The backend is running and the API is available.</p>
+        <p>If you are deploying only the backend process, upload either:</p>
+        <ul>
+          <li>a built frontend at <code>frontend/dist</code>, or</li>
+          <li>the fallback page at <code>backend/public/index.html</code>.</li>
+        </ul>
+        <p>Quick API check: <a href="/api/health">/api/health</a></p>
+      </section>
+    </main>
+  </body>
+</html>`;
+
+
 if (fs.existsSync(frontendIndexPath)) {
   app.use(express.static(frontendDistPath));
 
@@ -183,10 +215,12 @@ if (fs.existsSync(frontendIndexPath)) {
     return res.sendFile(fallbackUiPath);
   });
 } else {
-  app.get('/', (_req, res) => {
-    res.type('text/plain').send(
-      'Backend is running. Build and deploy frontend/dist to serve the UI from this root. API is available under /api/*.'
-    );
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+
+    return res.type('html').send(DEFAULT_FALLBACK_HTML);
   });
 }
 
