@@ -1,0 +1,127 @@
+:root {
+  color-scheme: dark;
+  --bg: #111322;
+  --panel: #1e2238;
+  --accent: #6d7dff;
+  --accent-2: #2fe5ff;
+  --text: #eef1ff;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at 10% 20%, #2a3070 0%, var(--bg) 45%);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+}
+
+.app {
+  width: min(760px, 92vw);
+  padding: 1rem;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2.1rem;
+}
+
+.subtitle {
+  opacity: 0.9;
+  margin-top: 0.3rem;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1rem;
+  margin-top: 0.9rem;
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.35);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.stats span {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  display: block;
+}
+
+.stats strong {
+  font-size: 1.35rem;
+}
+
+.reels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.reel {
+  display: grid;
+  place-items: center;
+  height: 105px;
+  font-size: 3rem;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #2f3555, #252c49);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.controls {
+  display: flex;
+  gap: 0.8rem;
+}
+
+button {
+  flex: 1;
+  border: 0;
+  border-radius: 10px;
+  padding: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #f4f6ff;
+  background: #353d6b;
+}
+
+button:hover {
+  filter: brightness(1.1);
+}
+
+.spin {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: #0d122e;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.paytable ul {
+  margin: 0.5rem 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding-left: 1rem;
+}
+
+.note {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  opacity: 0.85;
+}
+
+#message {
+  margin: 1rem 0 0;
+  font-weight: 600;
+}
