@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neon Reels (Demo)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>Neon Reels</h1>
+      <p class="subtitle">Arcade-style slot demo (no real money)</p>
+    </header>
+
+    <section class="panel stats" aria-label="Game stats">
+      <div><span>Balance</span><strong id="balance">1000</strong></div>
+      <div><span>Bet</span><strong id="bet">20</strong></div>
+      <div><span>Last Win</span><strong id="lastWin">0</strong></div>
+    </section>
+
+    <section class="panel reels" aria-label="Slot reels">
+      <div class="reel" id="reel1">🍒</div>
+      <div class="reel" id="reel2">🍋</div>
+      <div class="reel" id="reel3">🔔</div>
+    </section>
+
+    <section class="controls panel">
+      <button id="decreaseBet" aria-label="Decrease bet">- Bet</button>
+      <button id="spin" class="spin">Spin</button>
+      <button id="increaseBet" aria-label="Increase bet">+ Bet</button>
+    </section>
+
+    <section class="panel paytable" aria-label="Paytable">
+      <h2>Paytable (3-of-a-kind)</h2>
+      <ul>
+        <li>💎 x20</li>
+        <li>7️⃣ x15</li>
+        <li>🔔 x10</li>
+        <li>🍀 x8</li>
+        <li>🍒 x6</li>
+        <li>🍋 x5</li>
+      </ul>
+      <p class="note">21+ entertainment demo only. No wagering, payouts, or cash-out features.</p>
+    </section>
+
+    <p id="message" role="status" aria-live="polite">Press Spin to play.</p>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
